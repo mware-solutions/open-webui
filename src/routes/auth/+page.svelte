@@ -6,7 +6,7 @@
 	import { page } from '$app/stores';
 
 	import { getBackendConfig } from '$lib/apis';
-	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp } from '$lib/apis/auths';
+	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp, validateBigConnectToken } from '$lib/apis/auths';
 
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
@@ -81,6 +81,37 @@
 		}
 	};
 
+	const checkAuth = async () => {
+		console.log('checkAuth running');
+		console.log('Full URL:', window.location.href);
+
+		// Check for hash or search params
+		let urlToken;
+		const searchParams = new URLSearchParams(window.location.search);
+		const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
+
+		urlToken = searchParams.get('token') || (hashParams?.get('token') || null);
+
+		console.log('URL token found:', urlToken);
+
+		if (urlToken) {
+			console.log('Processing token:', urlToken);
+			const sessionUser = await validateBigConnectToken(urlToken).catch((error) => {
+				console.error('Token validation error:', error);
+				toast.error(error);
+				return null;
+			});
+
+			if (sessionUser) {
+				localStorage.token = sessionUser.token;
+				await setSessionUser(sessionUser);
+			}
+		} else {
+			await checkOauthCallback();
+		}
+	};
+
+
 	const checkOauthCallback = async () => {
 		if (!$page.url.hash) {
 			return;
@@ -106,9 +137,12 @@
 	};
 
 	let onboarding = false;
-
 	onMount(async () => {
+		console.log('onMount started');
+		await checkAuth();
+
 		if ($user !== undefined) {
+			console.log('User already defined, redirecting to /');
 			await goto('/');
 		}
 		await checkOauthCallback();
@@ -315,7 +349,7 @@
 								{#if $config?.features.enable_login_form || $config?.features.enable_ldap}
 									<span
 										class="px-3 text-sm font-medium text-gray-900 dark:text-white bg-transparent"
-										>{$i18n.t('or')}</span
+									>{$i18n.t('or')}</span
 									>
 								{/if}
 
@@ -333,16 +367,20 @@
 											<path
 												fill="#EA4335"
 												d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-											/><path
+											/>
+											<path
 												fill="#4285F4"
 												d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-											/><path
+											/>
+											<path
 												fill="#FBBC05"
 												d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-											/><path
+											/>
+											<path
 												fill="#34A853"
 												d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-											/><path fill="none" d="M0 0h48v48H0z" />
+											/>
+											<path fill="none" d="M0 0h48v48H0z" />
 										</svg>
 										<span>{$i18n.t('Continue with {{provider}}', { provider: 'Google' })}</span>
 									</button>
@@ -355,13 +393,16 @@
 										}}
 									>
 										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21" class="size-6 mr-3">
-											<rect x="1" y="1" width="9" height="9" fill="#f25022" /><rect
+											<rect x="1" y="1" width="9" height="9" fill="#f25022" />
+											<rect
 												x="1"
 												y="11"
 												width="9"
 												height="9"
 												fill="#00a4ef"
-											/><rect x="11" y="1" width="9" height="9" fill="#7fba00" /><rect
+											/>
+											<rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+											<rect
 												x="11"
 												y="11"
 												width="9"
@@ -395,9 +436,9 @@
 										</svg>
 
 										<span
-											>{$i18n.t('Continue with {{provider}}', {
-												provider: $config?.oauth?.providers?.oidc ?? 'SSO'
-											})}</span
+										>{$i18n.t('Continue with {{provider}}', {
+											provider: $config?.oauth?.providers?.oidc ?? 'SSO'
+										})}</span
 										>
 									</button>
 								{/if}
@@ -416,9 +457,9 @@
 									}}
 								>
 									<span
-										>{mode === 'ldap'
-											? $i18n.t('Continue with Email')
-											: $i18n.t('Continue with LDAP')}</span
+									>{mode === 'ldap'
+										? $i18n.t('Continue with Email')
+										: $i18n.t('Continue with LDAP')}</span
 									>
 								</button>
 							</div>

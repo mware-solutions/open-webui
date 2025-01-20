@@ -341,6 +341,8 @@ BYPASS_MODEL_ACCESS_CONTROL = (
     os.environ.get("BYPASS_MODEL_ACCESS_CONTROL", "False").lower() == "true"
 )
 
+
+
 ####################################
 # WEBUI_SECRET_KEY
 ####################################
@@ -351,6 +353,13 @@ WEBUI_SECRET_KEY = os.environ.get(
         "WEBUI_JWT_SECRET_KEY", "t0p-s3cr3t"
     ),  # DEPRECATED: remove at next major version
 )
+
+AUTH_TOKEN_PASSWORD = os.environ.get("AUTH_TOKEN_PASSWORD")
+AUTH_TOKEN_SALT = os.environ.get("AUTH_TOKEN_SALT")
+AUTH_TOKEN_EXPIRATION_TOLERANCE_IN_SECS= int(os.environ.get(
+            "AUTH_TOKEN_EXPIRATION_TOLERANCE_IN_SECS",
+            30))
+JWT_EXPIRES_IN=os.environ.get("JWT_EXPIRES_IN", "60m")
 
 WEBUI_SESSION_COOKIE_SAME_SITE = os.environ.get(
     "WEBUI_SESSION_COOKIE_SAME_SITE",

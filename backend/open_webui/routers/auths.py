@@ -1,7 +1,7 @@
 import re
 import uuid
 import time
-import datetime
+from datetime import datetime, timezone
 import logging
 from aiohttp import ClientSession
 
@@ -17,6 +17,7 @@ from open_webui.models.auths import (
     UpdatePasswordForm,
     UpdateProfileForm,
     UserResponse,
+    BigConnectTokenForm
 )
 from open_webui.models.users import Users
 
@@ -28,6 +29,8 @@ from open_webui.env import (
     WEBUI_SESSION_COOKIE_SAME_SITE,
     WEBUI_SESSION_COOKIE_SECURE,
     SRC_LOG_LEVELS,
+    AUTH_TOKEN_EXPIRATION_TOLERANCE_IN_SECS,
+    JWT_EXPIRES_IN
 )
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse, Response
@@ -54,10 +57,13 @@ from ssl import CERT_REQUIRED, PROTOCOL_TLS
 from ldap3 import Server, Connection, ALL, Tls
 from ldap3.utils.conv import escape_filter_chars
 
+from ..utils.auth import decode_token, decode_token_bigconnect
+
 router = APIRouter()
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
+
 
 ############################
 # GetSessionUser
@@ -71,7 +77,7 @@ class SessionUserResponse(Token, UserResponse):
 
 @router.get("/", response_model=SessionUserResponse)
 async def get_session_user(
-    request: Request, response: Response, user=Depends(get_current_user)
+        request: Request, response: Response, user=Depends(get_current_user)
 ):
     expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
     expires_at = None
@@ -123,7 +129,7 @@ async def get_session_user(
 
 @router.post("/update/profile", response_model=UserResponse)
 async def update_profile(
-    form_data: UpdateProfileForm, session_user=Depends(get_verified_user)
+        form_data: UpdateProfileForm, session_user=Depends(get_verified_user)
 ):
     if session_user:
         user = Users.update_user_by_id(
@@ -145,7 +151,7 @@ async def update_profile(
 
 @router.post("/update/password", response_model=bool)
 async def update_password(
-    form_data: UpdatePasswordForm, session_user=Depends(get_current_user)
+        form_data: UpdatePasswordForm, session_user=Depends(get_current_user)
 ):
     if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
         raise HTTPException(400, detail=ERROR_MESSAGES.ACTION_PROHIBITED)
@@ -403,8 +409,8 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
 async def signup(request: Request, response: Response, form_data: SignupForm):
     if WEBUI_AUTH:
         if (
-            not request.app.state.config.ENABLE_SIGNUP
-            or not request.app.state.config.ENABLE_LOGIN_FORM
+                not request.app.state.config.ENABLE_SIGNUP
+                or not request.app.state.config.ENABLE_LOGIN_FORM
         ):
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.ACCESS_PROHIBITED
@@ -642,7 +648,7 @@ class AdminConfig(BaseModel):
 
 @router.post("/admin/config")
 async def update_admin_config(
-    request: Request, form_data: AdminConfig, user=Depends(get_admin_user)
+        request: Request, form_data: AdminConfig, user=Depends(get_admin_user)
 ):
     request.app.state.config.SHOW_ADMIN_DETAILS = form_data.SHOW_ADMIN_DETAILS
     request.app.state.config.WEBUI_URL = form_data.WEBUI_URL
@@ -720,7 +726,7 @@ async def get_ldap_server(request: Request, user=Depends(get_admin_user)):
 
 @router.post("/admin/config/ldap/server")
 async def update_ldap_server(
-    request: Request, form_data: LdapServerConfig, user=Depends(get_admin_user)
+        request: Request, form_data: LdapServerConfig, user=Depends(get_admin_user)
 ):
     required_fields = [
         "label",
@@ -780,7 +786,7 @@ class LdapConfigForm(BaseModel):
 
 @router.post("/admin/config/ldap")
 async def update_ldap_config(
-    request: Request, form_data: LdapConfigForm, user=Depends(get_admin_user)
+        request: Request, form_data: LdapConfigForm, user=Depends(get_admin_user)
 ):
     request.app.state.config.ENABLE_LDAP = form_data.enable_ldap
     return {"ENABLE_LDAP": request.app.state.config.ENABLE_LDAP}
@@ -828,3 +834,95 @@ async def get_api_key(user=Depends(get_current_user)):
         }
     else:
         raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)
+
+
+@router.post("/bigconnect/validate", response_model=SessionUserResponse)
+async def validate_bigconnect_token(
+        request: Request,
+        response: Response,
+        form_data: BigConnectTokenForm
+):
+    try:
+        # Decode token using environment variables
+        decoded = decode_token_bigconnect(form_data.token)
+        if not decoded or 'sub' not in decoded:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or expired BigConnect token"
+            )
+
+        # Extract user ID from sub claim
+        user_id = decoded['sub']
+
+        # Add tolerance for token expiration
+        tolerance_seconds = AUTH_TOKEN_EXPIRATION_TOLERANCE_IN_SECS
+
+        current_time = int(time.time())
+        if 'exp' in decoded and decoded['exp'] < (current_time - tolerance_seconds):
+            raise HTTPException(
+                status_code=401,
+                detail="Token has expired"
+            )
+
+        # Rest of your existing validation logic...
+        user = Auths.authenticate_bigconnect_user({
+            'userId': user_id,
+            'exp': decoded.get('exp'),
+            'jti': decoded.get('jti')
+        })
+
+        if not user:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to authenticate user"
+            )
+
+        # Create session token with configured expiration
+        expires_delta = parse_duration(
+            JWT_EXPIRES_IN
+        )
+        expires_at = None
+        if expires_delta:
+            expires_at = int(time.time()) + int(expires_delta.total_seconds())
+
+        token = create_token(
+            data={"id": user.id},
+            expires_delta=expires_delta
+        )
+
+        # Fix: Create datetime with timezone info correctly
+        datetime_expires_at = (
+            datetime.fromtimestamp(expires_at).replace(tzinfo=timezone.utc)
+            if expires_at
+            else None
+        )
+
+        # Set cookie with configured security settings
+        response.set_cookie(
+            key="token",
+            value=token,
+            expires=datetime_expires_at,
+            httponly=True,
+            samesite=WEBUI_SESSION_COOKIE_SAME_SITE,
+            secure=WEBUI_SESSION_COOKIE_SECURE,
+        )
+
+        return {
+            "token": token,
+            "token_type": "Bearer",
+            "expires_at": expires_at,
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role,
+            "profile_image_url": user.profile_image_url
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"BigConnect validation error: {str(e)}")
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication failed"
+        )

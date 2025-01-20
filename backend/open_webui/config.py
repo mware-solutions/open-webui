@@ -11,7 +11,7 @@ import chromadb
 import requests
 import yaml
 from open_webui.internal.db import Base, get_db
-from open_webui.env import (
+from .env import (
     OPEN_WEBUI_DIR,
     DATA_DIR,
     ENV,

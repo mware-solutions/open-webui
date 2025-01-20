@@ -1,10 +1,14 @@
+import hashlib
 import logging
 import uuid
 import jwt
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union, List, Dict
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from open_webui.models.users import Users
 
 from open_webui.constants import ERROR_MESSAGES
@@ -13,6 +17,8 @@ from open_webui.env import WEBUI_SECRET_KEY
 from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
+
+from open_webui.env import AUTH_TOKEN_SALT, AUTH_TOKEN_PASSWORD
 
 logging.getLogger("passlib").setLevel(logging.ERROR)
 
@@ -42,7 +48,8 @@ def create_token(data: dict, expires_delta: Union[timedelta, None] = None) -> st
     payload = data.copy()
 
     if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
+        # Fix: Use timezone.utc instead of just timezone
+        expire = datetime.now(timezone.utc) + expires_delta
         payload.update({"exp": expire})
 
     encoded_jwt = jwt.encode(payload, SESSION_SECRET, algorithm=ALGORITHM)
@@ -57,6 +64,50 @@ def decode_token(token: str) -> Optional[dict]:
         return None
 
 
+def generate_key(password: str, salt: str) -> bytes:
+    """Generate a PBKDF2 key matching Java's implementation"""
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,  # 256 bits
+        salt=salt.encode(),
+        iterations=10000,  # Same as Java implementation
+        backend=default_backend()
+    )
+    return kdf.derive(password.encode())
+
+def decode_token_bigconnect(token: str) -> Optional[dict]:
+    """
+    Decode and verify BigConnect JWT token
+    """
+    try:
+        if not AUTH_TOKEN_PASSWORD or not AUTH_TOKEN_SALT:
+            raise ValueError("Missing required environment variables for token decoding")
+
+        # Generate the key using PBKDF2 (same as Java)
+        key = generate_key(AUTH_TOKEN_PASSWORD, AUTH_TOKEN_SALT)
+
+        # Decode JWT using the generated key
+        decoded = jwt.decode(
+            token,
+            key,
+            algorithms=["HS256"]
+        )
+
+        return decoded
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token has expired"
+        )
+    except jwt.InvalidSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token signature"
+        )
+    except Exception as e:
+        print(f"Token decoding error: {str(e)}")
+        return None
 def extract_token_from_auth_header(auth_header: str):
     return auth_header[len("Bearer ") :]
 

@@ -43,6 +43,9 @@ class Token(BaseModel):
     token_type: str
 
 
+class BigConnectTokenForm(BaseModel):
+    token: str
+
 class ApiKey(BaseModel):
     api_key: Optional[str] = None
 
@@ -164,6 +167,32 @@ class AuthsTable:
                     user = Users.get_user_by_id(auth.id)
                     return user
         except Exception:
+            return None
+
+    def authenticate_bigconnect_user(self, token_data: dict) -> Optional[UserModel]:
+        """
+        Authenticate or create user from BigConnect token data
+        """
+        log.info(f"authenticate_bigconnect_user: {token_data.get('userId')}")
+        try:
+            with get_db() as db:
+                # Try to find existing user by BigConnect userId
+                auth = db.query(Auth).filter_by(email=token_data['userId'], active=True).first()
+
+                if auth:
+                    # Existing user - return user model
+                    return Users.get_user_by_id(auth.id)
+                else:
+                    # Create new user from BigConnect data
+                    return self.insert_new_auth(
+                        email=token_data['userId'],
+                        password=str(uuid.uuid4()),  # Random password since using token auth
+                        name=token_data.get('name', 'BigConnect User'),
+                        role='user',  # Or get from config
+                        profile_image_url='/user.png'
+                    )
+        except Exception as e:
+            log.error(f"Error authenticating BigConnect user: {str(e)}")
             return None
 
     def update_user_password_by_id(self, id: str, new_password: str) -> bool:

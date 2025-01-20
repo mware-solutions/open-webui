@@ -29,7 +29,7 @@
 	import { Toaster, toast } from 'svelte-sonner';
 
 	import { getBackendConfig } from '$lib/apis';
-	import { getSessionUser } from '$lib/apis/auths';
+	import { getSessionUser, validateBigConnectToken } from '$lib/apis/auths';
 
 	import '../tailwind.css';
 	import '../app.css';
@@ -177,6 +177,44 @@
 	};
 
 	onMount(async () => {
+		console.log('Root layout initial load - Full URL:', window.location.href);
+		console.log('Root layout initial load - Search:', window.location.search);
+		console.log('Root layout initial load - Hash:', window.location.hash);
+		console.log('Root layout initial load - Pathname:', window.location.pathname);
+
+		// Add token handling at the start
+		const params = new URLSearchParams(window.location.search);
+		const token = params.get('token');
+		if (token) {
+			console.log('Found BigConnect token, validating...');
+			try {
+				const sessionUser = await validateBigConnectToken(token).catch((error) => {
+					console.error('Token validation error:', error);
+					toast.error(error);
+					return null;
+				});
+
+				if (sessionUser) {
+					console.log('Token validated, setting user session');
+					localStorage.token = sessionUser.token;
+					await user.set(sessionUser);
+					await config.set(await getBackendConfig());
+
+					// Setup socket first
+					await setupSocket($config.features?.enable_websocket ?? true);
+					// Then emit the join event
+					$socket?.emit('user-join', { auth: { token: sessionUser.token } });
+
+					// Clean URL
+					window.history.replaceState({}, document.title, window.location.pathname);
+				}
+			} catch (error) {
+				console.error('Failed to validate BigConnect token:', error);
+				toast.error('Failed to validate login token');
+			}
+		}
+
+
 		// Listen for messages on the BroadcastChannel
 		bc.onmessage = (event) => {
 			if (event.data === 'active') {
