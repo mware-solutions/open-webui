@@ -187,8 +187,8 @@ class AuthsTable:
                     return self.insert_new_auth(
                         email=token_data['userId'],
                         password=str(uuid.uuid4()),  # Random password since using token auth
-                        name=token_data.get('name', 'BigConnect User'),
-                        role='user',  # Or get from config
+                        name=token_data['userId'],
+                        role='admin',  # Or get from config
                         profile_image_url='/user.png'
                     )
         except Exception as e:

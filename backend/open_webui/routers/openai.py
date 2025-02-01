@@ -56,7 +56,7 @@ async def send_get_request(url, key=None):
     try:
         async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
             async with session.get(
-                url, headers={**({"Authorization": f"Bearer {key}"} if key else {})}
+                url, headers={**({"Authorization": f"Bearer {key}"} if key else {})}, ssl=False
             ) as response:
                 return await response.json()
     except Exception as e:
@@ -432,6 +432,7 @@ async def get_models(
                             else {}
                         ),
                     },
+                        ssl=False
                 ) as r:
                     if r.status != 200:
                         # Extract response error details if available
@@ -502,6 +503,7 @@ async def verify_connection(
                     "Authorization": f"Bearer {key}",
                     "Content-Type": "application/json",
                 },
+                ssl=False
             ) as r:
                 if r.status != 200:
                     # Extract response error details if available
@@ -655,6 +657,7 @@ async def generate_chat_completion(
                     else {}
                 ),
             },
+            ssl=False
         )
 
         # Check if response is SSE
@@ -734,6 +737,7 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
                     else {}
                 ),
             },
+            ssl=False
         )
         r.raise_for_status()
 
