@@ -5,6 +5,7 @@
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge';
 
 	import { getContext, onDestroy, onMount, tick } from 'svelte';
+
 	const i18n: Writable<i18nType> = getContext('i18n');
 
 	import { goto } from '$app/navigation';
@@ -85,6 +86,7 @@
 	export let chatIdProp = '';
 
 	let loaded = false;
+	let currentEmotion = 'neutru';
 	const eventTarget = new EventTarget();
 	let controlPane;
 	let controlPaneComponent;
@@ -129,6 +131,7 @@
 	let files = [];
 	let params = {};
 
+
 	$: if (chatIdProp) {
 		(async () => {
 			console.log(chatIdProp);
@@ -152,7 +155,8 @@
 						files = input.files;
 						selectedToolIds = input.selectedToolIds;
 						webSearchEnabled = input.webSearchEnabled;
-					} catch (e) {}
+					} catch (e) {
+					}
 				}
 
 				window.setTimeout(() => scrollToBottom(), 0);
@@ -167,6 +171,17 @@
 	$: if (selectedModels && chatIdProp !== '') {
 		saveSessionSelectedModels();
 	}
+
+	const emotionMap = {
+		'tristețe': '/assets/images/emotions/sadjpg.jpg',
+		'frică': '/assets/images/emotions/fear.webp',
+		'furie': '/assets/images/emotions/angry.png',
+		'rușine': '/assets/images/emotions/ashamed.jpg',
+		'neutru': '/assets/images/emotions/default.webp',
+		'anxietate': '/assets/images/emotions/anxios.jpg',
+		'bucurie': '/assets/images/emotions/happy.jpg',
+		'speranță': '/assets/images/emotions/hope.png'
+	};
 
 	const saveSessionSelectedModels = () => {
 		if (selectedModels.length === 0 || (selectedModels.length === 1 && selectedModels[0] === '')) {
@@ -421,7 +436,8 @@
 		const chatInput = document.getElementById('chat-input');
 		chatInput?.focus();
 
-		chats.subscribe(() => {});
+		chats.subscribe(() => {
+		});
 	});
 
 	onDestroy(() => {
@@ -617,6 +633,7 @@
 	//////////////////////////
 
 	const initNewChat = async () => {
+		currentEmotion = 'neutru';
 		if ($page.url.searchParams.get('models')) {
 			selectedModels = $page.url.searchParams.get('models')?.split(',');
 		} else if ($page.url.searchParams.get('model')) {
@@ -1053,6 +1070,31 @@
 	};
 
 	const chatCompletionEventHandler = async (data, message, chatId) => {
+		console.log('Received message:', data);
+
+		const stripEmotionAndUpdateState = (text) => {
+			if (!text) return text;
+			const emotionMatch = text.match(/\[Emoție: (.+?)\]/);
+			if (emotionMatch) {
+				currentEmotion = emotionMatch[1];
+				return text.replace(/\[Emoție: .+?\]/, '').trim();
+			}
+			return text;
+		};
+
+		if (data.content) {
+			data.content = stripEmotionAndUpdateState(data.content);
+			message.content = data.content;
+		}
+
+		if (data.choices && data.choices[0]?.message?.content) {
+			message.content = stripEmotionAndUpdateState(data.choices[0].message.content);
+		} else if (data.choices && data.choices[0]?.delta?.content) {
+			let value = data.choices[0]?.delta?.content ?? '';
+			value = stripEmotionAndUpdateState(value);
+			message.content += value;
+		}
+
 		const { id, done, choices, content, sources, selected_model_id, error, usage } = data;
 
 		if (error) {
@@ -1065,10 +1107,8 @@
 
 		if (choices) {
 			if (choices[0]?.message?.content) {
-				// Non-stream response
 				message.content += choices[0]?.message?.content;
 			} else {
-				// Stream response
 				let value = choices[0]?.delta?.content ?? '';
 				if (message.content == '' && value == '\n') {
 					console.log('Empty response');
@@ -1079,18 +1119,14 @@
 						navigator.vibrate(5);
 					}
 
-					// Emit chat event for TTS
 					const messageContentParts = getMessageContentParts(
 						message.content,
 						$config?.audio?.tts?.split_on ?? 'punctuation'
 					);
 					messageContentParts.pop();
 
-					// dispatch only last sentence and make sure it hasn't been dispatched before
-					if (
-						messageContentParts.length > 0 &&
-						messageContentParts[messageContentParts.length - 1] !== message.lastSentence
-					) {
+					if (messageContentParts.length > 0 &&
+						messageContentParts[messageContentParts.length - 1] !== message.lastSentence) {
 						message.lastSentence = messageContentParts[messageContentParts.length - 1];
 						eventTarget.dispatchEvent(
 							new CustomEvent('chat', {
@@ -1106,25 +1142,20 @@
 		}
 
 		if (content) {
-			// REALTIME_CHAT_SAVE is disabled
 			message.content = content;
 
 			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
 				navigator.vibrate(5);
 			}
 
-			// Emit chat event for TTS
 			const messageContentParts = getMessageContentParts(
 				message.content,
 				$config?.audio?.tts?.split_on ?? 'punctuation'
 			);
 			messageContentParts.pop();
 
-			// dispatch only last sentence and make sure it hasn't been dispatched before
-			if (
-				messageContentParts.length > 0 &&
-				messageContentParts[messageContentParts.length - 1] !== message.lastSentence
-			) {
+			if (messageContentParts.length > 0 &&
+				messageContentParts[messageContentParts.length - 1] !== message.lastSentence) {
 				message.lastSentence = messageContentParts[messageContentParts.length - 1];
 				eventTarget.dispatchEvent(
 					new CustomEvent('chat', {
@@ -1160,11 +1191,8 @@
 				document.getElementById(`speak-button-${message.id}`)?.click();
 			}
 
-			// Emit chat event for TTS
 			let lastMessageContentPart =
-				getMessageContentParts(message.content, $config?.audio?.tts?.split_on ?? 'punctuation')?.at(
-					-1
-				) ?? '';
+				getMessageContentParts(message.content, $config?.audio?.tts?.split_on ?? 'punctuation')?.at(-1) ?? '';
 			if (lastMessageContentPart) {
 				eventTarget.dispatchEvent(
 					new CustomEvent('chat', {
@@ -1464,19 +1492,19 @@
 		const messages = [
 			params?.system || $settings.system || (responseMessage?.userContext ?? null)
 				? {
-						role: 'system',
-						content: `${promptTemplate(
-							params?.system ?? $settings?.system ?? '',
-							$user.name,
-							$settings?.userLocation
-								? await getAndUpdateUserLocation(localStorage.token)
-								: undefined
-						)}${
-							(responseMessage?.userContext ?? null)
-								? `\n\nUser Context:\n${responseMessage?.userContext ?? ''}`
-								: ''
-						}`
-					}
+					role: 'system',
+					content: `${promptTemplate(
+						params?.system ?? $settings?.system ?? '',
+						$user.name,
+						$settings?.userLocation
+							? await getAndUpdateUserLocation(localStorage.token)
+							: undefined
+					)}${
+						(responseMessage?.userContext ?? null)
+							? `\n\nUser Context:\n${responseMessage?.userContext ?? ''}`
+							: ''
+					}`
+				}
 				: undefined,
 			...createMessagesList(responseMessageId)
 		]
@@ -1486,24 +1514,24 @@
 				...((message.files?.filter((file) => file.type === 'image').length > 0 ?? false) &&
 				message.role === 'user'
 					? {
-							content: [
-								{
-									type: 'text',
-									text: message?.merged?.content ?? message.content
-								},
-								...message.files
-									.filter((file) => file.type === 'image')
-									.map((file) => ({
-										type: 'image_url',
-										image_url: {
-											url: file.url
-										}
-									}))
-							]
-						}
+						content: [
+							{
+								type: 'text',
+								text: message?.merged?.content ?? message.content
+							},
+							...message.files
+								.filter((file) => file.type === 'image')
+								.map((file) => ({
+									type: 'image_url',
+									image_url: {
+										url: file.url
+									}
+								}))
+						]
+					}
 					: {
-							content: message?.merged?.content ?? message.content
-						})
+						content: message?.merged?.content ?? message.content
+					})
 			}));
 
 		const res = await generateOpenAIChatCompletion(
@@ -1521,8 +1549,8 @@
 					stop:
 						(params?.stop ?? $settings?.params?.stop ?? undefined)
 							? (params?.stop.split(',').map((token) => token.trim()) ?? $settings.params.stop).map(
-									(str) => decodeURIComponent(JSON.parse('"' + str.replace(/\"/g, '\\"') + '"'))
-								)
+								(str) => decodeURIComponent(JSON.parse('"' + str.replace(/\"/g, '\\"') + '"'))
+							)
 							: undefined
 				},
 
@@ -1543,19 +1571,19 @@
 						messages.at(1)?.role === 'user')) &&
 				selectedModels[0] === model.id
 					? {
-							background_tasks: {
-								title_generation: $settings?.title?.auto ?? true,
-								tags_generation: $settings?.autoTags ?? true
-							}
+						background_tasks: {
+							title_generation: $settings?.title?.auto ?? true,
+							tags_generation: $settings?.autoTags ?? true
 						}
+					}
 					: {}),
 
 				...(stream && (model.info?.meta?.capabilities?.usage ?? false)
 					? {
-							stream_options: {
-								include_usage: true
-							}
+						stream_options: {
+							include_usage: true
 						}
+					}
 					: {})
 			},
 			`${WEBUI_BASE_URL}/api`
@@ -1863,13 +1891,19 @@
 			shareEnabled={!!history.currentId}
 			{initNewChat}
 		/>
-
+		<div class="absolute md:fixed left-4 md:left-[300px] top-16 md:top-20">
+			<img
+				src={emotionMap[currentEmotion]}
+				alt={`Victor - ${currentEmotion}`}
+				class="w-16 h-16 md:w-32 md:h-32 rounded-full shadow-lg"
+			/>
+		</div>
 		<PaneGroup direction="horizontal" class="w-full h-full">
 			<Pane defaultSize={50} class="h-full flex w-full relative">
 				{#if $banners.length > 0 && !history.currentId && !$chatId && selectedModels.length <= 1}
 					<div class="absolute top-12 left-0 right-0 w-full z-30">
 						<div class=" flex flex-col gap-1 w-full">
-							{#each $banners.filter( (b) => (b.dismissible ? !JSON.parse(localStorage.getItem('dismissedBannerIds') ?? '[]').includes(b.id) : true) ) as banner}
+							{#each $banners.filter((b) => (b.dismissible ? !JSON.parse(localStorage.getItem('dismissedBannerIds') ?? '[]').includes(b.id) : true)) as banner}
 								<Banner
 									{banner}
 									on:dismiss={(e) => {
