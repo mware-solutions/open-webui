@@ -671,6 +671,7 @@
 										floatingButtons={message?.done}
 										save={!readOnly}
 										{model}
+										emotion={message.emotion || 'neutru'}
 										onSourceClick={(e) => {
 											console.log(e);
 											const sourceButton = document.getElementById(`source-${e}`);

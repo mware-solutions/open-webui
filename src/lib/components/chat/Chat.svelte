@@ -784,8 +784,10 @@
 						? chatContent.history
 						: convertMessagesToHistory(chatContent.messages);
 
-				chatTitle.set(chatContent.title);
+				// Set the current emotion based on chat history
+				currentEmotion = getLastEmotion(history);
 
+				chatTitle.set(chatContent.title);
 				const userSettings = await getUserSettings(localStorage.token);
 
 				if (userSettings) {
@@ -1069,22 +1071,45 @@
 		}
 	};
 
+
+	const getLastEmotion = (history) => {
+		if (!history?.messages || Object.keys(history.messages).length === 0) {
+			return 'neutru';
+		}
+
+		// Find the last assistant message
+		const messages = Object.values(history.messages);
+		for (let i = messages.length - 1; i >= 0; i--) {
+			const message = messages[i];
+			if (message.role === 'assistant' && message.emotion) {
+				return message.emotion;
+			}
+		}
+
+		return 'neutru';
+	};
+
 	const chatCompletionEventHandler = async (data, message, chatId) => {
 		console.log('Received message:', data);
 
 		const stripEmotionAndUpdateState = (text) => {
-			if (!text) return text;
+			if (!text) return { text, emotion: 'neutru' }; // Default to neutral
 			const emotionMatch = text.match(/\[Emoție: (.+?)\]/);
 			if (emotionMatch) {
 				currentEmotion = emotionMatch[1];
-				return text.replace(/\[Emoție: .+?\]/, '').trim();
+				return {
+					text: text.replace(/\[Emoție: .+?\]/, '').trim(),
+					emotion: emotionMatch[1]
+				};
 			}
-			return text;
+			return { text, emotion: 'neutru' }; // Default to neutral if no emotion found
 		};
 
 		if (data.content) {
-			data.content = stripEmotionAndUpdateState(data.content);
-			message.content = data.content;
+			const { text, emotion } = stripEmotionAndUpdateState(data.content);
+			data.content = text;
+			message.emotion = emotion;
+			currentEmotion = emotion;
 		}
 
 		if (data.choices && data.choices[0]?.message?.content) {
@@ -1891,7 +1916,7 @@
 			shareEnabled={!!history.currentId}
 			{initNewChat}
 		/>
-		<div class="absolute md:fixed left-4 md:left-[300px] top-16 md:top-20">
+		<div class="absolute md:fixed {$showSidebar ? 'md:left-72' : 'md:left-16'} left-4 top-16 md:top-20">
 			<img
 				src={emotionMap[currentEmotion]}
 				alt={`Victor - ${currentEmotion}`}

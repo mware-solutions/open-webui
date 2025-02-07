@@ -1,5 +1,7 @@
 <script>
 	import { onDestroy, onMount, tick, getContext, createEventDispatcher } from 'svelte';
+	import EmotionIndicator from '../EmotionIndicator.svelte';
+
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
@@ -17,12 +19,15 @@
 	export let save = false;
 	export let floatingButtons = true;
 
-	export let onSourceClick = () => {};
-	export let onAddMessages = () => {};
+	export let onSourceClick = () => {
+	};
+	export let onAddMessages = () => {
+	};
 
 	let contentContainerElement;
 
 	let floatingButtonsElement;
+	export let emotion = 'neutru'; // Add emotion prop
 
 	const updateButtonPosition = (event) => {
 		const buttonsContainerElement = document.getElementById(`floating-buttons-${id}`);
@@ -157,6 +162,8 @@
 			}
 		}}
 	/>
+	<EmotionIndicator {emotion} />
+
 </div>
 
 {#if floatingButtons && model}
