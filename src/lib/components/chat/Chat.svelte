@@ -173,14 +173,14 @@
 	}
 
 	const emotionMap = {
-		'tristețe': '/assets/images/emotions/sadjpg.jpg',
-		'frică': '/assets/images/emotions/fear.webp',
-		'furie': '/assets/images/emotions/angry.png',
-		'rușine': '/assets/images/emotions/ashamed.jpg',
-		'neutru': '/assets/images/emotions/default.webp',
-		'anxietate': '/assets/images/emotions/anxios.jpg',
-		'bucurie': '/assets/images/emotions/happy.jpg',
-		'speranță': '/assets/images/emotions/hope.png'
+		'tristețe': '/assets/images/emotions/tristete.png',
+		'frică': '/assets/images/emotions/frica.png',
+		'furie': '/assets/images/emotions/furie.png',
+		'rușine': '/assets/images/emotions/rusiine.png',
+		'neutru': '/assets/images/emotions/default.png',
+		'anxietate': '/assets/images/emotions/anxietate.png',
+		'bucurie': '/assets/images/emotions/bucurie.png',
+		'speranță': '/assets/images/emotions/speranta.png'
 	};
 
 	const saveSessionSelectedModels = () => {
