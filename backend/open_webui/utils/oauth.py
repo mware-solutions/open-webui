@@ -33,6 +33,7 @@ from open_webui.config import (
     WEBHOOK_URL,
     JWT_EXPIRES_IN,
     AppConfig,
+    FRONTEND_URL
 )
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import WEBUI_SESSION_COOKIE_SAME_SITE, WEBUI_SESSION_COOKIE_SECURE
@@ -340,7 +341,7 @@ class OAuthManager:
                 secure=WEBUI_SESSION_COOKIE_SECURE,
             )
         # Redirect back to the frontend with the JWT token
-        redirect_url = f"{request.base_url}auth#token={jwt_token}"
+        redirect_url = f"{FRONTEND_URL.value}/auth#token={jwt_token}"
         return RedirectResponse(url=redirect_url, headers=response.headers)
 
 

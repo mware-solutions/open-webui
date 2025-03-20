@@ -94,21 +94,21 @@
 
 		console.log('URL token found:', urlToken);
 
-		if (urlToken) {
-			console.log('Processing token:', urlToken);
-			const sessionUser = await validateBigConnectToken(urlToken).catch((error) => {
-				console.error('Token validation error:', error);
-				toast.error(error);
-				return null;
-			});
+		//if (urlToken) {
+		//	console.log('Processing token:', urlToken);
+		//	const sessionUser = await validateBigConnectToken(urlToken).catch((error) => {
+		//		console.error('Token validation error:', error);
+		//		toast.error(error);
+		//		return null;
+		//	});
 
-			if (sessionUser) {
-				localStorage.token = sessionUser.token;
-				await setSessionUser(sessionUser);
-			}
-		} else {
-			await checkOauthCallback();
-		}
+		//	if (sessionUser) {
+		//		localStorage.token = sessionUser.token;
+		//		await setSessionUser(sessionUser);
+		//	}
+		//} else {
+		//	await checkOauthCallback();
+		//}
 	};
 
 

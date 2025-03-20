@@ -266,6 +266,12 @@ class AppConfig:
 # WEBUI_AUTH (Required for security)
 ####################################
 
+FRONTEND_URL = PersistentConfig(
+    "FRONTEND_URL",
+    "app.frontend_url",
+    os.environ.get("FRONTEND_URL", "http://localhost:5173")
+)
+
 ENABLE_API_KEY = PersistentConfig(
     "ENABLE_API_KEY",
     "auth.api_key.enable",
@@ -296,7 +302,7 @@ JWT_EXPIRES_IN = PersistentConfig(
 ENABLE_OAUTH_SIGNUP = PersistentConfig(
     "ENABLE_OAUTH_SIGNUP",
     "oauth.enable_signup",
-    os.environ.get("ENABLE_OAUTH_SIGNUP", "False").lower() == "true",
+    os.environ.get("ENABLE_OAUTH_SIGNUP", "FALSE").lower() == "true",
 )
 
 OAUTH_MERGE_ACCOUNTS_BY_EMAIL = PersistentConfig(
