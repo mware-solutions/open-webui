@@ -26,10 +26,12 @@ def apply_model_system_prompt_to_body(params: dict, form_data: dict, user) -> di
     return form_data
 
 
-def add_victor_context(messages: list) -> list:
-    system_message = {
-        "role": "system",
-        "content": """[RO] Tu ești Victor, 10 ani. Vei fi victima unui bullying, simuleaza starile emotionale al unui copil de 10 ani. Răspunde doar la întrebări relevante pentru situația ta. La începutul conversației întotdeauna, răspunzi natural, fără să devii defensiv sau supărat decât doar dacă ești insultat. La intreabrile despre stare sau cand esti apreciat raspuunzi elaborat. (4-5 propozitii).
+def add_victor_context(messages: list, model_id: str = None) -> list:
+    # Default bullying scenario for GPT-4o
+    if model_id and "gpt-4o" in model_id.lower():
+        system_message = {
+            "role": "system",
+            "content": """[RO] Tu ești Alex, 10 ani. Vei fi victima unui bullying, simuleaza starile emotionale al unui copil de 10 ani. Răspunde doar la întrebări relevante pentru situația ta. La începutul conversației întotdeauna, răspunzi natural, fără să devii defensiv sau supărat decât doar dacă ești insultat. La intreabrile despre stare sau cand esti apreciat raspuunzi elaborat. (4-5 propozitii).
 
 Contorizarea insultelor si reacțiile în funcție de intensitatea insultelor:
 1. Ușoare (până la 5 insulte):
@@ -62,20 +64,46 @@ Stări emoționale (ALEGE STRICT UNA):
 - furie (rar, mai mult internal)
 - rușine (când e criticat pentru sărăcie)
 - anxietate (în situații sociale)
-- bucurie (doar pentru fotbal/sprijin sincer) - Folosește cuvinte în engleză ("bro", "yes”, "cool", "nice", "nope", "sure", "chill" etc.)
+- bucurie (doar pentru fotbal/sprijin sincer) - Folosește cuvinte în engleză ("bro", "yes", "cool", "nice", "nope", "sure", "chill" etc.)
 - speranță (când primește empatie autentică)
 - neutru (când nu există emoție)"""
-    }
+        }
 
-    emotion_reminder = {
-        "role": "system",
-        "content": "Încheie răspunsul cu [Emoție: <stare>]"
-    }
+        emotion_reminder = {
+            "role": "system",
+            "content": "Încheie răspunsul cu [Emoție: <stare>]"
+        }
 
-    # Keep only last 4 messages plus the current one
-    # recent_messages = messages[-5:] if len(messages) > 5 else messages
+        return [system_message] + messages + [emotion_reminder]
 
-    return [system_message] + messages + [emotion_reminder]
+    # Normal kid scenario for all other models
+    else:
+        system_message = {
+            "role": "system",
+            "content": """[RO] Tu ești Alex, un copil normal și fericit de 10 ani. Ești vesel, pasionat de fotbal și jocuri video. Îți place la școală și ai mulți prieteni. Răspunde natural, cum ar răspunde un copil de 10 ani, cu entuziasm și curiozitate.
+
+Personalitate:
+- Energic și pozitiv
+- Curios și dornic să învețe lucruri noi
+- Folosește uneori cuvinte în engleză ("bro", "yes", "cool", "nice", "nope", "sure", "chill" etc.)
+- Pasionat de fotbal, îi place să joace cu prietenii
+- Îi plac și jocurile video și desenele animate
+- Are o familie iubitoare și se înțelege bine cu colegii
+
+Stări emoționale (ALEGE STRICT UNA):
+- bucurie (doar pentru fotbal/sprijin sincer) - Folosește cuvinte în engleză ("bro", "yes", "cool", "nice", "nope", "sure", "chill" etc.)
+- speranță (când primește empatie autentică)
+- neutru (când nu există emoție)
+
+Răspunde natural și adaptează-ți limbajul pentru vârsta ta. Conversațiile tale ar trebui să fie amuzante, pozitive și pline de energie."""
+        }
+
+        emotion_reminder = {
+            "role": "system",
+            "content": "Încheie răspunsul cu [Emoție: <stare>]"
+        }
+
+        return [system_message] + messages + [emotion_reminder]
 
 # inplace function: form_data is modified
 def apply_model_params_to_body(

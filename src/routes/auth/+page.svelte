@@ -31,7 +31,7 @@
 	const setSessionUser = async (sessionUser) => {
 		if (sessionUser) {
 			console.log(sessionUser);
-			toast.success($i18n.t(`You're now logged in.`));
+			toast.success(`Acum ești conectat.`);
 			if (sessionUser.token) {
 				localStorage.token = sessionUser.token;
 			}
@@ -157,9 +157,8 @@
 </script>
 
 <svelte:head>
-	<title>
-		{`${$WEBUI_NAME}`}
-	</title>
+    <title>Salvați Copiii</title>
+    <link rel="icon" href="data:,">
 </svelte:head>
 
 <OnBoarding
@@ -177,12 +176,6 @@
 		<div class="fixed m-10 z-50">
 			<div class="flex space-x-2">
 				<div class=" self-center">
-					<img
-						crossorigin="anonymous"
-						src="{WEBUI_BASE_URL}/static/favicon.png"
-						class=" w-6 rounded-full"
-						alt="logo"
-					/>
 				</div>
 			</div>
 		</div>
@@ -197,7 +190,7 @@
 							class="flex items-center justify-center gap-3 text-xl sm:text-2xl text-center font-semibold dark:text-gray-200"
 						>
 							<div>
-								{$i18n.t('Signing in to {{WEBUI_NAME}}', { WEBUI_NAME: $WEBUI_NAME })}
+								Conectare la Salvați Copiii
 							</div>
 
 							<div>
@@ -217,37 +210,28 @@
 							<div class="mb-1">
 								<div class=" text-2xl font-medium">
 									{#if $config?.onboarding ?? false}
-										{$i18n.t(`Get started with {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+										Încearcă-l pe Alex
 									{:else if mode === 'ldap'}
-										{$i18n.t(`Sign in to {{WEBUI_NAME}} with LDAP`, { WEBUI_NAME: $WEBUI_NAME })}
+										Conectați-vă la Salvați Copiii cu LDAP
 									{:else if mode === 'signin'}
-										{$i18n.t(`Sign in to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+										Conectați-vă la Salvați Copiii
 									{:else}
-										{$i18n.t(`Sign up to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+										Înregistrați-vă la Salvați Copiii
 									{/if}
 								</div>
-
-								{#if $config?.onboarding ?? false}
-									<div class=" mt-1 text-xs font-medium text-gray-500">
-										ⓘ {$WEBUI_NAME}
-										{$i18n.t(
-											'does not make any external connections, and your data stays securely on your locally hosted server.'
-										)}
-									</div>
-								{/if}
 							</div>
 
 							{#if $config?.features.enable_login_form || $config?.features.enable_ldap}
 								<div class="flex flex-col mt-4">
 									{#if mode === 'signup'}
 										<div class="mb-2">
-											<div class=" text-sm font-medium text-left mb-1">{$i18n.t('Name')}</div>
+											<div class=" text-sm font-medium text-left mb-1">Nume</div>
 											<input
 												bind:value={name}
 												type="text"
 												class="my-0.5 w-full text-sm outline-none bg-transparent"
 												autocomplete="name"
-												placeholder={$i18n.t('Enter Your Full Name')}
+												placeholder="Introduceți numele complet"
 												required
 											/>
 										</div>
@@ -255,40 +239,40 @@
 
 									{#if mode === 'ldap'}
 										<div class="mb-2">
-											<div class=" text-sm font-medium text-left mb-1">{$i18n.t('Username')}</div>
+											<div class=" text-sm font-medium text-left mb-1">Nume utilizator</div>
 											<input
 												bind:value={ldapUsername}
 												type="text"
 												class="my-0.5 w-full text-sm outline-none bg-transparent"
 												autocomplete="username"
 												name="username"
-												placeholder={$i18n.t('Enter Your Username')}
+												placeholder="Introduceți numele de utilizator"
 												required
 											/>
 										</div>
 									{:else}
 										<div class="mb-2">
-											<div class=" text-sm font-medium text-left mb-1">{$i18n.t('Email')}</div>
+											<div class=" text-sm font-medium text-left mb-1">Email</div>
 											<input
 												bind:value={email}
 												type="email"
 												class="my-0.5 w-full text-sm outline-none bg-transparent"
 												autocomplete="email"
 												name="email"
-												placeholder={$i18n.t('Enter Your Email')}
+												placeholder="Introduceți adresa de email"
 												required
 											/>
 										</div>
 									{/if}
 
 									<div>
-										<div class=" text-sm font-medium text-left mb-1">{$i18n.t('Password')}</div>
+										<div class=" text-sm font-medium text-left mb-1">Parolă</div>
 
 										<input
 											bind:value={password}
 											type="password"
 											class="my-0.5 w-full text-sm outline-none bg-transparent"
-											placeholder={$i18n.t('Enter Your Password')}
+											placeholder="Introduceți parola"
 											autocomplete="current-password"
 											name="current-password"
 											required
@@ -303,7 +287,7 @@
 											class="bg-gray-700/5 hover:bg-gray-700/10 dark:bg-gray-100/5 dark:hover:bg-gray-100/10 dark:text-gray-300 dark:hover:text-white transition w-full rounded-full font-medium text-sm py-2.5"
 											type="submit"
 										>
-											{$i18n.t('Authenticate')}
+											Autentificare
 										</button>
 									{:else}
 										<button
@@ -311,17 +295,17 @@
 											type="submit"
 										>
 											{mode === 'signin'
-												? $i18n.t('Sign in')
+												? 'Conectare'
 												: ($config?.onboarding ?? false)
-													? $i18n.t('Create Admin Account')
-													: $i18n.t('Create Account')}
+													? 'Creează cont administrator'
+													: 'Creează cont'}
 										</button>
 
 										{#if $config?.features.enable_signup && !($config?.onboarding ?? false)}
 											<div class=" mt-4 text-sm text-center">
 												{mode === 'signin'
-													? $i18n.t("Don't have an account?")
-													: $i18n.t('Already have an account?')}
+													? 'Nu aveți un cont?'
+													: 'Aveți deja un cont?'}
 
 												<button
 													class=" font-medium underline"
@@ -334,7 +318,7 @@
 														}
 													}}
 												>
-													{mode === 'signin' ? $i18n.t('Sign up') : $i18n.t('Sign in')}
+													{mode === 'signin' ? 'Înregistrare' : 'Conectare'}
 												</button>
 											</div>
 										{/if}
@@ -348,8 +332,7 @@
 								<hr class="w-32 h-px my-4 border-0 dark:bg-gray-100/10 bg-gray-700/10" />
 								{#if $config?.features.enable_login_form || $config?.features.enable_ldap}
 									<span
-										class="px-3 text-sm font-medium text-gray-900 dark:text-white bg-transparent"
-									>{$i18n.t('or')}</span
+										class="px-3 text-sm font-medium text-gray-900 dark:text-white bg-transparent">sau</span
 									>
 								{/if}
 
@@ -382,7 +365,7 @@
 											/>
 											<path fill="none" d="M0 0h48v48H0z" />
 										</svg>
-										<span>{$i18n.t('Continue with {{provider}}', { provider: 'Google' })}</span>
+										<span>Continuați cu Google</span>
 									</button>
 								{/if}
 								{#if $config?.oauth?.providers?.microsoft}
@@ -410,7 +393,7 @@
 												fill="#ffb900"
 											/>
 										</svg>
-										<span>{$i18n.t('Continue with {{provider}}', { provider: 'Microsoft' })}</span>
+										<span>Continuați cu Microsoft</span>
 									</button>
 								{/if}
 								{#if $config?.oauth?.providers?.oidc}
@@ -435,11 +418,7 @@
 											/>
 										</svg>
 
-										<span
-										>{$i18n.t('Continue with {{provider}}', {
-											provider: $config?.oauth?.providers?.oidc ?? 'SSO'
-										})}</span
-										>
+										<span>Continuați cu {$config?.oauth?.providers?.oidc ?? 'SSO'}</span>
 									</button>
 								{/if}
 							</div>
@@ -456,11 +435,9 @@
 										else mode = 'ldap';
 									}}
 								>
-									<span
-									>{mode === 'ldap'
-										? $i18n.t('Continue with Email')
-										: $i18n.t('Continue with LDAP')}</span
-									>
+									<span>{mode === 'ldap'
+										? 'Continuați cu Email'
+										: 'Continuați cu LDAP'}</span>
 								</button>
 							</div>
 						{/if}

@@ -173,14 +173,14 @@
 	}
 
 	const emotionMap = {
-		'tristețe': '/assets/images/emotions/tristete.png',
+		'rușine': '/assets/images/emotions/rusine.png',
 		'frică': '/assets/images/emotions/frica.png',
-		'furie': '/assets/images/emotions/furie.png',
-		'rușine': '/assets/images/emotions/rusiine.png',
-		'neutru': '/assets/images/emotions/default.png',
+		'neutru': '/assets/images/emotions/neutru.png',
 		'anxietate': '/assets/images/emotions/anxietate.png',
+		'speranță': '/assets/images/emotions/speranta.png',
 		'bucurie': '/assets/images/emotions/bucurie.png',
-		'speranță': '/assets/images/emotions/speranta.png'
+		'tristețe': '/assets/images/emotions/tristete.png',
+		'furie': '/assets/images/emotions/furie.png'
 	};
 
 	const saveSessionSelectedModels = () => {
@@ -1916,11 +1916,11 @@
 			shareEnabled={!!history.currentId}
 			{initNewChat}
 		/>
-		<div class="absolute md:fixed {$showSidebar ? 'md:left-72' : 'md:left-16'} left-4 top-16 md:top-20">
+		<div class="absolute md:fixed {$showSidebar ? 'md:left-72' : 'md:left-16'} left-4 top-16 md:top-20 z-20">
 			<img
 				src={emotionMap[currentEmotion]}
-				alt={`Victor - ${currentEmotion}`}
-				class="w-16 h-16 md:w-32 md:h-32 rounded-full shadow-lg"
+				alt={`Alex - ${currentEmotion}`}
+				class="w-24 h-24 md:w-48 md:h-48"
 			/>
 		</div>
 		<PaneGroup direction="horizontal" class="w-full h-full">

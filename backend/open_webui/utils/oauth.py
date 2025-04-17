@@ -341,7 +341,18 @@ class OAuthManager:
                 secure=WEBUI_SESSION_COOKIE_SECURE,
             )
         # Redirect back to the frontend with the JWT token
-        redirect_url = f"{FRONTEND_URL.value}/auth#token={jwt_token}"
+
+        host = str(request.base_url.hostname)
+        port = request.base_url.port
+        protocol = request.base_url.scheme
+
+        # Build the base URL (with port if not standard)
+        if port and port not in (80, 443):
+            base_url = f"{protocol}://{host}:{port}"
+        else:
+            base_url = f"{protocol}://{host}"
+
+        redirect_url = f"{base_url}/auth#token={jwt_token}"
         return RedirectResponse(url=redirect_url, headers=response.headers)
 
 

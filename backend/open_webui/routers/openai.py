@@ -618,7 +618,7 @@ async def generate_chat_completion(
         del payload["max_tokens"]
 
     if "messages" in payload:
-        payload["messages"] = add_victor_context(payload["messages"])
+        payload["messages"] = add_victor_context(payload["messages"], payload.get("model"))
     # Convert the modified body back to JSON
     payload = json.dumps(payload)
 
