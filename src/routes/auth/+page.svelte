@@ -15,6 +15,7 @@
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import OnBoarding from '$lib/components/OnBoarding.svelte';
+	import GDPRDisclaimer from '$lib/components/common/GDPRDisclaimer.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -441,6 +442,9 @@
 								</button>
 							</div>
 						{/if}
+						<div class="mt-4 mb-2">
+						    <span class="text-sm">Vezi</span> <a href="/gdpr" class="text-sm text-blue-600 underline hover:text-blue-800 transition">Acordul GDPR</a>
+						</div>
 					</div>
 				{/if}
 			</div>

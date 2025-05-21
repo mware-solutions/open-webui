@@ -113,7 +113,7 @@
 									.join(', ')}
 								placement="top"
 							>
-								<button
+								<!--<button
 									on:click={() => {
 										selectedModelIdx = modelIdx;
 									}}
@@ -128,7 +128,7 @@
 										alt="logo"
 										draggable="false"
 									/>
-								</button>
+								</button>-->
 							</Tooltip>
 						{/each}
 					</div>

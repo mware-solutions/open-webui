@@ -1235,6 +1235,11 @@
 								</div>
 							</div>
 						</form>
+						<div class="flex">
+						    <div class="ml-1 mt-2 mb-1.5 space-x-1 text-xs text-gray-500">
+						        Această aplicație este o experiență fictivă, de tip joc virtual care simulează posibilele reacții ale unui copil supus bullyingului. Pentru informații corecte și validate despre bullying, te invităm să vizitezi <a href="https://farabullying.ro/" target="_blank" class="text-gray-500">www.farabullying.ro</a>.
+						    </div>
+						</div>
 					{/if}
 				</div>
 			</div>
