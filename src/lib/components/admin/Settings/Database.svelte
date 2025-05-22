@@ -7,6 +7,7 @@
 	import { config, user } from '$lib/stores';
 	import { toast } from 'svelte-sonner';
 	import { getAllUserChats } from '$lib/apis/chats';
+	import { getUserById, getUsers } from '$lib/apis/users';
 	import { exportConfig, importConfig } from '$lib/apis/configs';
 	import * as XLSX from 'xlsx';
 
@@ -26,12 +27,29 @@
     	let blob: Blob;
     	const filename = `all-chats-export-${Date.now()}.${format}`;
 
-        console.log('format:', format);
+        const userInfoMap = new Map<string, { name: string; email: string }>();
+
+    	if(format === 'csv' || format === 'xlsx'){
+            const users = await getUsers(localStorage.token);
+
+            try{
+                users.forEach((u) => {
+                	userInfoMap.set(u.id, {
+                		name: u.name,
+                		email: u.email
+                	});
+                });
+            } catch(error){
+                console.log("getUserById failed: ", error);
+            }
+
+    	}
+
     	if (format === 'json') {
     		blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     	} else if (format === 'csv') {
     	    try{
-                const normalized = normalizeForExport(data);
+                const normalized = expandChatsForExport(data, userInfoMap);
                 const worksheet = XLSX.utils.json_to_sheet(normalized);
                 const csv = XLSX.utils.sheet_to_csv(worksheet);
                 blob = new Blob([csv], { type: 'text/csv' });
@@ -39,7 +57,7 @@
                 console.error("❌ CSV export failed:", error);
             }
     	} else if (format === 'xlsx') {
-    	    const normalized = normalizeForExport(data);
+    	    const normalized = expandChatsForExport(data, userInfoMap);
     		const worksheet = XLSX.utils.json_to_sheet(normalized);
     		const workbook = XLSX.utils.book_new();
     		XLSX.utils.book_append_sheet(workbook, worksheet, 'Chats');
@@ -58,16 +76,47 @@
 	});
 	let format = 'json';
 
-	function normalizeForExport(data: any[]): any[] {
-    	return data.map((row) =>
-    		Object.fromEntries(
-    			Object.entries(row).map(([key, value]) => [
-    				key,
-    				typeof value === 'object' && value !== null ? JSON.stringify(value) : value
-    			])
-    		)
-    	);
+	function expandChatsForExport(rawData: any[], userInfoMap: Map<string, { name: string; email: string }>): any[] {
+    	const rows: any[] = [];
+
+    	for (const item of rawData) {
+    		const chat = item.chat || {};
+    		const messages: any[] = chat.messages || [];
+    		let lastUserMessage = '';
+
+    		for (const msg of messages) {
+    			if (msg.role === 'user') {
+    				lastUserMessage = msg.content || '';
+    			} else if (msg.role === 'assistant') {
+    			    const userInfo = userInfoMap.get(item.user_id) || {};
+    				rows.push({
+    					user_id: item.user_id,
+    					name: userInfo.name || '',
+                        email: userInfo.email || '',
+    					chat_title: chat.title || '',
+    					model: chat.models?.[0] || '',
+    					timestamp: formatTimestamp(msg.timestamp),
+    					user_message: lastUserMessage,
+    					assistant_reply: msg.content || ''
+    				});
+    				lastUserMessage = '';
+    			}
+    		}
+    	}
+
+    	return rows;
     }
+
+
+    function formatTimestamp(ts: number): string {
+        if (!ts) return '';
+        if (ts > 1e12) {
+            return new Date(ts).toLocaleString();
+        } else {
+            return new Date(ts * 1000).toLocaleString();
+        }
+    }
+
 </script>
 
 <form

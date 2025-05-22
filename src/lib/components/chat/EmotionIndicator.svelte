@@ -7,9 +7,9 @@
     'furie': '😠 Furie',
     'rușine': '😳 Rușine',
     'neutru': '😐 Neutru',
-    'anxietate': '😰 Anxietate',
+    'anxietate': '😟 Anxietate',
     'bucurie': '😊 Bucurie',
-    'speranță': '🤗 Speranță'
+    'speranță': '✨ Speranță'
   };
 
   const emotionIcons = {
@@ -18,9 +18,9 @@
     'furie': '😠',
     'rușine': '😳',
     'neutru': '😐',
-    'anxietate': '😰',
+    'anxietate': '😟',
     'bucurie': '😊',
-    'speranță': '🤗'
+    'speranță': '✨'
   };
 
   let isTooltipVisible = false;

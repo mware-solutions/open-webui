@@ -1090,7 +1090,7 @@
 	};
 
 	const chatCompletionEventHandler = async (data, message, chatId) => {
-		console.log('Received message:', data);
+		//console.log('Received message:', data);
 
 		const stripEmotionAndUpdateState = (text) => {
 			if (!text) return { text, emotion: 'neutru' }; // Default to neutral
