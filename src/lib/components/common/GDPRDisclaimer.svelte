@@ -18,7 +18,7 @@
   </div>
 </header>
 
-<main class="enable_scroll_bar max-w-4xl mx-auto px-4 py-10 text-gray-800 dark:text-gray-100 font-sans">
+<main class="enable_scroll_bar max-w-4xl mx-auto px-4 pb-10 text-gray-800 dark:text-gray-100 font-sans">
   <h1 class="text-3xl sm:text-3xl font-bold text-center mb-4">
     ACORD PRIVIND PRELUCRAREA DATELOR CU CARACTER PERSONAL (GDPR)
   </h1>
@@ -166,5 +166,8 @@
   .enable_scroll_bar{
     overflow-y: auto;
     height: 100vh;
+  }
+  main{
+    padding-top: 70px;
   }
 </style>
