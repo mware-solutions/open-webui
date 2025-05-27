@@ -442,9 +442,10 @@
 								</button>
 							</div>
 						{/if}
+						<!--
 						<div class="mt-4 mb-2">
 						    <span class="text-sm">Vezi</span> <a href="/gdpr" class="text-sm text-blue-600 underline hover:text-blue-800 transition">Acordul GDPR</a>
-						</div>
+						</div>-->
 					</div>
 				{/if}
 			</div>
