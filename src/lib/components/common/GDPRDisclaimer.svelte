@@ -89,14 +89,7 @@
   </section>
 
   <section class="mb-10">
-    <h2 class="text-2xl font-semibold mb-2">7. PERIOADA DE PĂSTRARE A DATELOR</h2>
-    <p>
-      Datele dvs. vor fi păstrate pentru o perioadă care nu depășește 30 de zile de la ultima utilizare a aplicației, cu excepția cazurilor în care o perioadă mai lungă este impusă de lege sau este justificată precis.
-    </p>
-  </section>
-
-  <section class="mb-10">
-    <h2 class="text-2xl font-semibold mb-2">8. DREPTURILE DVS.</h2>
+    <h2 class="text-2xl font-semibold mb-2">7. DREPTURILE DVS.</h2>
     <p> În conformitate cu prevederile GDPR, beneficiați de următoarele drepturi:</p>
     <ul class="list-disc pl-6 space-y-1">
       <li>Dreptul de acces la datele dvs.</li>
@@ -114,7 +107,7 @@
   </section>
 
   <section class="mb-10">
-    <h2 class="text-2xl font-semibold mb-2">9. MĂSURI DE SECURITATE</h2>
+    <h2 class="text-2xl font-semibold mb-2">8. MĂSURI DE SECURITATE</h2>
     <p>
       Aplicația noastră este găzduită în infrastructura cloud furnizată de StateMesh și beneficiază de măsurile de securitate implementate de această platformă, conform documentației lor de securitate disponibilă la
       <a href="https://docs.statemesh.net/architecture/security" target="_blank" class="text-blue-600 underline">docs.statemesh.net</a>.
@@ -131,7 +124,7 @@
   </section>
 
   <section class="mb-10">
-    <h2 class="text-2xl font-semibold mb-2">10. CONTACT PENTRU ÎNTREBĂRI PRIVIND PROTECȚIA DATELOR</h2>
+    <h2 class="text-2xl font-semibold mb-2">9. CONTACT PENTRU ÎNTREBĂRI PRIVIND PROTECȚIA DATELOR</h2>
     <p>Pentru orice întrebări legate de prelucrarea datelor dvs. cu caracter personal sau pentru exercitarea drepturilor dvs., ne puteți contacta la:</p>
     <p>Email: <a href="mailto:flavius.burca@m-ware.eu" class="text-blue-600 underline hover:text-blue-800">flavius.burca@m-ware.eu</a></p>
     <p>Telefon: 0727399091</p>
@@ -139,14 +132,14 @@
   </section>
 
   <section class="mb-10">
-    <h2 class="text-2xl font-semibold mb-2">11. MODIFICĂRI ALE POLITICII DE CONFIDENȚIALITATE</h2>
+    <h2 class="text-2xl font-semibold mb-2">10. MODIFICĂRI ALE POLITICII DE CONFIDENȚIALITATE</h2>
     <p>
       Ne rezervăm dreptul de a modifica prezenta politică de confidențialitate. Orice modificări vor fi publicate în cadrul aplicației și, dacă acestea sunt semnificative, vă vom notifica direct.
     </p>
   </section>
 
   <section class="mb-10">
-    <h2 class="text-2xl font-semibold mb-2">12. COOKIE-URI ȘI TEHNOLOGII SIMILARE</h2>
+    <h2 class="text-2xl font-semibold mb-2">11. COOKIE-URI ȘI TEHNOLOGII SIMILARE</h2>
     <p>
       Aplicația noastră poate utiliza cookie-uri și tehnologii similare pentru a îmbunătăți experiența utilizatorului. Puteți găsi mai multe informații despre cookie-urile utilizate și opțiunile de gestionare a acestora în Politica noastră privind Cookie-urile.
     </p>
